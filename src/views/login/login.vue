@@ -1,28 +1,48 @@
 <script lang="ts" setup>
 import { KAKAO } from './constants'
-function loginKaKao() {
-  console.info(KAKAO.REST_API_KEY)
-  return 
-  //https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}
-  window.open(
-    `${KAKAO.URL}?response_type=code&client_id=${KAKAO.REST_API_KEY}&redirect_uri=${KAKAO.REDIRECT_URI}`
-  )
-  const callback = async (callbackData: string) => {
-    console.info('콜콜콜백으로 응답을 받았나요?')
-    const data = JSON.parse(callbackData)
-    console.info(data)
-  }
-  window.addEventListener('message', (event) => {
-    // 보안상의 이유로, 이벤트의 origin을 확인하는 것이 좋습니다.
-    if (event.origin === window.location.origin) {
-      const callbackData = event.data; // 카카오 로그인에서 받은 데이터
-      console.info('콜콜콜백으로 응답을 받았나요?')
-      const data = JSON.parse(callbackData)
-      console.info(data)
+  // 카카오 로그인 팝업 호출
+  function loginKaKao() {
+      const popup = window.open(
+           `${KAKAO.URL}?response_type=code&client_id=${KAKAO.REST_API_KEY}&redirect_uri=${KAKAO.REDIRECT_URI}`
+      )
+
+      // 팝업 차단 확인
+      if (!popup) {
+        console.error('팝업 창이 차단되었습니다.');
+      }
+
+      // 부모 창에 콜백 함수 등록
+      window.callbackKaKaoLogin = async function (data: string) {
+        console.info('팝업으로부터 데이터를 받았습니다: ', data);
+
+        const questionMarkIndex = data.indexOf('?')
+     if (questionMarkIndex === -1 || data.includes('error')) return
+
+        const queryString = data.slice(questionMarkIndex + 1, data.length)
+        const params = queryString
+          .split('&')
+          .map(item => {
+            const [key, value] = item.split('=')
+            return { key, value }
+          })
+          .reduce((acc: Record<string, any>, cur) => {
+            acc[cur.key] = cur.value
+            return acc
+          }, {})
+
+
+          //api 호출
+
+      console.info(params)
+        // // JSON 파싱
+        // try {
+        //   const data = JSON.parse(callbackData);
+        //   console.info('파싱된 데이터:', data);
+        // } catch (err) {
+        //   console.error('JSON 파싱 실패:', err);
+        // }
+      };
     }
-  })
-  // window.callbackKaKaoLogin = callback
-}
 </script>
 <template>
   <div>
